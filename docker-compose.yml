@@ -1,23 +1,37 @@
 services:
-  app:
-    build: .
-    volumes:
-      - .:/app
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres
-    depends_on:
-      - db
-    command: python main.py  # или ваш запускной скрипт
-
   db:
     image: postgres:13
     environment:
+      POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: postgres  # оставляем стандартную БД для инициализации
     ports:
-      - "5432:5432"  # проброс порта для подключения извне
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  db_setup:
+    build: .
+    environment:
+      DB_HOST: db
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: db_for_openMeteo
+    depends_on:
+      - db
+    command: python db_setup.py  # ваш скрипт инициализации БД
+
+  etl:
+    build: .
+    environment:
+      DB_HOST: db
+      DB_USER: admin
+      DB_PASSWORD: password
+      DB_NAME: db_for_openMeteo
+    depends_on:
+      - db_setup  # ждем инициализации БД
+    volumes:
+      - .:/app
 
 volumes:
-  postgres_data:
+  pg_data:

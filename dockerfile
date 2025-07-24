@@ -1,12 +1,15 @@
+# Используем официальный образ Python
 FROM python:3.12-slim
 
+# Рабочая директория
 WORKDIR /app
 
-# Копируем зависимости и устанавливаем их
+# Копируем зависимости и исходный код
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копируем ВСЕ файлы из текущей директории (кроме указанных в .dockerignore)
 COPY . .
 
-CMD ["python", "main.py"]  # Убедитесь, что main.py — это ваш главный файл
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Команда для запуска ETL-процесса (замените на вашу)
+CMD ["python", "main.py"]
