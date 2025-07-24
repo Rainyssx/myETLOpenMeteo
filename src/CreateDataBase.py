@@ -1,47 +1,54 @@
 import psycopg2
 from psycopg2 import sql, Error
-from  DBscheme import DB_SCHEMA_SCRIPT
+from DBscheme import DB_SCHEMA_SCRIPT
 
-# Данные из Docker-контейнера
-DB_HOST = "localhost"
-DB_PORT = "5432"
-DB_USER = "user"  # как в вашем `docker run`
-DB_PASSWORD = "password"  # как в вашем `docker run`
-NEW_DB_NAME = "db_for_openMeteo"  # название новой БД
+def setup_database(DB_HOST,DB_USER,DB_PORT,DB_PASSWORD,DB_NAME):
+    try:
+        # Подключаемся к стандартной БД postgres для создания новой БД
+        conn = psycopg2.connect(
+            dbname="postgres",  # стандартная БД для подключения
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        conn.autocommit = True
 
-try:
-    # Подключаемся к БД "postgres" (она есть по умолчанию)
-    conn = psycopg2.connect(
-        dbname=NEW_DB_NAME,  # стандартная БД
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT
-    )
-    conn.autocommit = True  # чтобы CREATE DATABASE сработал
+        cursor = conn.cursor()
 
-    cursor = conn.cursor()
-    cursor.execute(
-        sql.SQL("SELECT 1 FROM pg_database WHERE datname = {}")
-        .format(sql.Literal(NEW_DB_NAME))
-    )
-
-    if not cursor.fetchone():
-    # Создаём БД, если её не
-    # т
+        # Проверяем существование БД
         cursor.execute(
-            sql.SQL("CREATE DATABASE {}")
-            .format(sql.Identifier(NEW_DB_NAME)))
-        print(f"БД '{NEW_DB_NAME}' создана!")
-    else:
-        print(f"БД '{NEW_DB_NAME}' уже существует.")
+            sql.SQL("SELECT 1 FROM pg_database WHERE datname = {}")
+            .format(sql.Literal(DB_NAME))
+        )
 
-    cursor.execute(DB_SCHEMA_SCRIPT)
-    print(f"Вся база создана")
+        if not cursor.fetchone():
+            cursor.execute(
+                sql.SQL("CREATE DATABASE {}")
+                .format(sql.Identifier(DB_NAME))
+            )
+            print(f"БД '{DB_NAME}' создана!")
+        else:
+            print(f"БД '{DB_NAME}' уже существует.")
 
+        # Подключаемся к новой БД для создания схемы
+        conn.close()
+        conn = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        cursor = conn.cursor()
+        cursor.execute(DB_SCHEMA_SCRIPT)
+        conn.commit()
+        print("Схема базы данных успешно создана")
 
-except Error as e:
-    print("Ошибка PostgreSQL:", e)
-
+    except Error as e:
+        print("Ошибка PostgreSQL:", e)
+    finally:
+        if conn:
+            conn.close()
 
 

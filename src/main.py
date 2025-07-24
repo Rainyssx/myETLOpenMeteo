@@ -1,11 +1,5 @@
-from GetDataFunction import getDatafromOpenMeteo, outputinFiletoCsv , outputFiletoDB
-import re
+from GetDataFunction import getDatafromOpenMeteo, outputinFiletoCsv , outputFiletoDB , is_valid_date_format
 import os
-
-def is_valid_date_format(date_str):
-    pattern = r"^\d{4}-\d{2}-\d{2}$"
-    return bool(re.fullmatch(pattern, date_str))
-
 
 def main( latitude , longitude, start_date, end_date , path = "/home/pavel/Рабочий стол/", nameFile = "Data" , form = "DB"):
     try:
@@ -42,7 +36,7 @@ if __name__ == "__main__":
     else:
         latitude = float(latitude)
         longitude = float(longitude)
-    form - input("Введите формат выгрузки данных: можно написать 'csv'. При любом другом вводе данные будут выгружены в бд")
+    form = input("Введите формат выгрузки данных: можно написать 'csv'. При любом другом вводе данные будут выгружены в бд")
 
     nameFile = "Datacsv"
     if form == "csv":

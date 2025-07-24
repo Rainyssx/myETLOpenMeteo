@@ -1,8 +1,13 @@
 import json
+import logging
+import os
+import re
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+import CreateDataBase
 
 url1 = "https://archive-api.open-meteo.com/v1/archive"
 url = "https://api.open-meteo.com/v1/forecast"
@@ -121,9 +126,31 @@ def outputinFiletoCsv(data, path, nameFile ):
     data.to_csv(path + nameFile)
 
 def outputFiletoDB(data):
-    engine = create_engine('postgresql://myuser:mypassword@localhost:5432/db_for_openMeteo')
-    data.to_sql('weather_data', engine, if_exists='append', index=False, method='multi')
+    try:
+        # Получаем параметры подключения
+        DB_HOST = os.getenv("DB_HOST", "db")
+        DB_USER = os.getenv("DB_USER", "admin")
+        DB_PORT = os.getenv("DB_PORT", "5432")
+        DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+        DB_NAME = os.getenv("DB_NAME", "db_for_openMeteo")
 
+        # Инициализация БД
+        CreateDataBase.setup_database(DB_HOST, DB_USER, DB_PORT, DB_PASSWORD, DB_NAME)
+
+        # Подключение и запись данных
+        engine = create_engine(
+            f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+        )
+        data.to_sql('weather_data', engine, if_exists='append', index=False, method='multi')
+
+        logging.info("Данные успешно записаны в БД")
+
+    except SQLAlchemyError as e:
+        logging.error(f"Ошибка SQLAlchemy: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Неожиданная ошибка: {e}")
+        raise
 
 def is_valid_date_format(date_str):
     pattern = r"^\d{4}-\d{2}-\d{2}$"
