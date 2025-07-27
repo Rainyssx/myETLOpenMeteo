@@ -23,9 +23,6 @@ def getDatafromOpenMeteo(latitude = 55, longitude = 83,start_date = None, end_da
         start_date = end_date
     elif start_date == "":
         end_date = start_date
-    else:
-        raise ValueError("Неправильный формат данных даты")
-
 
     params = {
         "latitude": latitude,
@@ -39,7 +36,7 @@ def getDatafromOpenMeteo(latitude = 55, longitude = 83,start_date = None, end_da
         "wind_speed_unit": "ms",
         "precipitation_unit": "mm"
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url1, params=params)
     data = response.json()
 
 
@@ -157,4 +154,16 @@ def outputFiletoDB(data):
 
 def is_valid_date_format(date_str):
     pattern = r"^\d{4}-\d{2}-\d{2}$"
-    return bool(re.fullmatch(pattern, date_str))
+    if not  bool(re.fullmatch(pattern, date_str)):
+        return False
+    proverka_year,_,_ = datetime.now().strftime("%Y-%m-%d").split("-")
+
+    try:
+        year, month, day = map(int, date_str.split("-"))
+        date = datetime(year, month, day)  # попытка создать дату (вызовет ValueError, если дата некорректна)
+        if  year > proverka_year:
+            return False
+    except (ValueError, AttributeError):
+        return False
+
+    return True

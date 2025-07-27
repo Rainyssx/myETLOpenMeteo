@@ -1,6 +1,5 @@
 from GetDataFunction import getDatafromOpenMeteo, outputinFiletoCsv , outputFiletoDB , is_valid_date_format
 import os
-
 def main( latitude , longitude, start_date, end_date , path = "/home/pavel/Рабочий стол/", nameFile = "Data" , form = "DB"):
     try:
         data = getDatafromOpenMeteo(latitude = latitude, longitude = longitude,start_date = start_date, end_date = end_date)
@@ -57,14 +56,19 @@ if __name__ == "__main__":
     print("Начальную и конечную даты можно оставить пустыми, тогда данные будут только за сегодня")
     print("Ввести дату в формате %Y-%m-%d Год полностью - месяц двумя цифрами и число двумя цифрами")
 
-    start_date = input("Ввести начальную дату: ")
+    start_date = input("Ввести начальную дату: ").strip()
     if start_date:
         if not is_valid_date_format(start_date):
+            start_date = ""
             print("Неправильный формат даты")
+    else:
+        st_d = start_date.split("-")
 
-    end_date = input("Ввести конечную дату")
+
+    end_date = input("Ввести конечную дату: ").strip()
     if end_date:
-        if not is_valid_date_format(end_date):
+        if not is_valid_date_format(end_date.strip()):
+            end_date = ""
             print("Неправильный формат даты")
 
     main(latitude , longitude, start_date, end_date , path , nameFile  , form )
