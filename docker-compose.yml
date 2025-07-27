@@ -4,14 +4,17 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres  # оставляем стандартную БД для инициализации
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   db_setup:
-    build: .
+    image: python:3.12-slim
+    volumes:
+      - .:/app
+    working_dir: /app
     environment:
       DB_HOST: db
       DB_USER: admin
@@ -19,19 +22,20 @@ services:
       DB_NAME: db_for_openMeteo
     depends_on:
       - db
-    command: python db_setup.py  # ваш скрипт инициализации БД
+    command: python db_setup.py
 
   etl:
-    build: .
+    image: python:3.12-slim
+    volumes:
+      - .:/app
+    working_dir: /app
     environment:
       DB_HOST: db
       DB_USER: admin
       DB_PASSWORD: password
       DB_NAME: db_for_openMeteo
     depends_on:
-      - db_setup  # ждем инициализации БД
-    volumes:
-      - .:/app
+      - db_setup
 
 volumes:
   pg_data:

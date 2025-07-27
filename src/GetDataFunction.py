@@ -128,20 +128,23 @@ def outputinFiletoCsv(data, path, nameFile ):
 def outputFiletoDB(data):
     try:
         # Получаем параметры подключения
-        DB_HOST = os.getenv("DB_HOST", "db")
+        DB_HOST = os.getenv("DB_HOST", "localhost")
         DB_USER = os.getenv("DB_USER", "admin")
         DB_PORT = os.getenv("DB_PORT", "5432")
         DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
         DB_NAME = os.getenv("DB_NAME", "db_for_openMeteo")
 
+        print(DB_HOST, DB_USER, DB_PORT, DB_PASSWORD, DB_NAME)
         # Инициализация БД
         CreateDataBase.setup_database(DB_HOST, DB_USER, DB_PORT, DB_PASSWORD, DB_NAME)
+
+        print("Функция подключилась и создала бд")
 
         # Подключение и запись данных
         engine = create_engine(
             f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
         )
-        data.to_sql('weather_data', engine, if_exists='append', index=False, method='multi')
+        data.to_sql('weather_data', engine, if_exists='replace', index=False, method='multi')
 
         logging.info("Данные успешно записаны в БД")
 

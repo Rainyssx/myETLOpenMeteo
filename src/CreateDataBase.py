@@ -40,15 +40,28 @@ def setup_database(DB_HOST,DB_USER,DB_PORT,DB_PASSWORD,DB_NAME):
             host=DB_HOST,
             port=DB_PORT
         )
-        cursor = conn.cursor()
+        cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 
+                    FROM information_schema.tables 
+                    WHERE table_name = 'weather_data'
+                );
+            """)
+        schema_exists = cursor.fetchone()[0]
+
+        if schema_exists:
+            print("Схема уже существует, создание не требуется")
+            return
         cursor.execute(DB_SCHEMA_SCRIPT)
         conn.commit()
         print("Схема базы данных успешно создана")
 
-    except Error as e:
-        print("Ошибка PostgreSQL:", e)
-    finally:
+
         if conn:
             conn.close()
+
+    except Error as e:
+        print("Ошибка PostgreSQL:", e)
+
 
 
